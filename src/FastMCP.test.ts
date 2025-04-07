@@ -16,6 +16,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { createEventSource, EventSourceClient } from "eventsource-client";
 
+/**
+ * 运行测试服务器的辅助函数
+ * Helper function to run test server
+ */
 const runWithTestServer = async ({
   run,
   client: createClient,
@@ -59,11 +63,11 @@ const runWithTestServer = async ({
           },
           {
             capabilities: {},
-          },
+          }
         );
 
     const transport = new SSEClientTransport(
-      new URL(`http://localhost:${port}/sse`),
+      new URL(`http://localhost:${port}/sse`)
     );
 
     const session = await new Promise<FastMCPSession>((resolve) => {
@@ -82,6 +86,10 @@ const runWithTestServer = async ({
   return port;
 };
 
+/**
+ * 测试用例：添加工具
+ * Test case: Adding tools
+ */
 test("adds tools", async () => {
   await runWithTestServer({
     server: async () => {
@@ -127,6 +135,10 @@ test("adds tools", async () => {
   });
 });
 
+/**
+ * 测试用例：调用工具
+ * Test case: Calling a tool
+ */
 test("calls a tool", async () => {
   await runWithTestServer({
     server: async () => {
@@ -157,7 +169,7 @@ test("calls a tool", async () => {
             a: 1,
             b: 2,
           },
-        }),
+        })
       ).toEqual({
         content: [{ type: "text", text: "3" }],
       });
@@ -200,7 +212,7 @@ test("returns a list", async () => {
             a: 1,
             b: 2,
           },
-        }),
+        })
       ).toEqual({
         content: [
           { type: "text", text: "a" },
@@ -230,7 +242,7 @@ test("returns an image", async () => {
           return imageContent({
             buffer: Buffer.from(
               "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-              "base64",
+              "base64"
             ),
           });
         },
@@ -246,7 +258,7 @@ test("returns an image", async () => {
             a: 1,
             b: 2,
           },
-        }),
+        })
       ).toEqual({
         content: [
           {
@@ -290,7 +302,7 @@ test("handles UserError errors", async () => {
             a: 1,
             b: 2,
           },
-        }),
+        })
       ).toEqual({
         content: [{ type: "text", text: "Something went wrong" }],
         isError: true,
@@ -371,7 +383,7 @@ test("tracks tool progress", async () => {
         undefined,
         {
           onprogress: onProgress,
-        },
+        }
       );
 
       expect(onProgress).toHaveBeenCalledTimes(1);
@@ -438,7 +450,7 @@ test("sends logging messages to the client", async () => {
               ...(message.params.data ?? {}),
             });
           }
-        },
+        }
       );
 
       await client.callTool({
@@ -533,7 +545,7 @@ test("clients reads a resource", async () => {
       expect(
         await client.readResource({
           uri: "file:///logs/app.log",
-        }),
+        })
       ).toEqual({
         contents: [
           {
@@ -578,7 +590,7 @@ test("clients reads a resource that returns multiple resources", async () => {
       expect(
         await client.readResource({
           uri: "file:///logs/app.log",
-        }),
+        })
       ).toEqual({
         contents: [
           {
@@ -631,7 +643,7 @@ test("adds prompts", async () => {
           arguments: {
             changes: "foo",
           },
-        }),
+        })
       ).toEqual({
         description: "Generate a Git commit message",
         messages: [
@@ -693,11 +705,11 @@ test("uses events to notify server of client connect/disconnect", async () => {
     },
     {
       capabilities: {},
-    },
+    }
   );
 
   const transport = new SSEClientTransport(
-    new URL(`http://localhost:${port}/sse`),
+    new URL(`http://localhost:${port}/sse`)
   );
 
   await client.connect(transport);
@@ -742,11 +754,11 @@ test("handles multiple clients", async () => {
     },
     {
       capabilities: {},
-    },
+    }
   );
 
   const transport1 = new SSEClientTransport(
-    new URL(`http://localhost:${port}/sse`),
+    new URL(`http://localhost:${port}/sse`)
   );
 
   await client1.connect(transport1);
@@ -758,11 +770,11 @@ test("handles multiple clients", async () => {
     },
     {
       capabilities: {},
-    },
+    }
   );
 
   const transport2 = new SSEClientTransport(
-    new URL(`http://localhost:${port}/sse`),
+    new URL(`http://localhost:${port}/sse`)
   );
 
   await client2.connect(transport2);
@@ -791,7 +803,7 @@ test("session knows about client capabilities", async () => {
               listChanged: true,
             },
           },
-        },
+        }
       );
 
       client.setRequestHandler(ListRootsRequestSchema, () => {
@@ -831,7 +843,7 @@ test("session knows about roots", async () => {
               listChanged: true,
             },
           },
-        },
+        }
       );
 
       client.setRequestHandler(ListRootsRequestSchema, () => {
@@ -879,7 +891,7 @@ test("session listens to roots changes", async () => {
               listChanged: true,
             },
           },
-        },
+        }
       );
 
       client.setRequestHandler(ListRootsRequestSchema, () => {
@@ -1193,7 +1205,7 @@ test("clients reads a resource accessed via a resource template", async () => {
       expect(
         await client.readResource({
           uri: "file:///logs/app.log",
-        }),
+        })
       ).toEqual({
         contents: [
           {
@@ -1235,7 +1247,7 @@ test("makes a sampling request", async () => {
           capabilities: {
             sampling: {},
           },
-        },
+        }
       );
       return client;
     },
@@ -1310,7 +1322,7 @@ test("throws ErrorCode.InvalidParams if tool parameters do not match zod schema"
 
         // @ts-expect-error - we know that error is an McpError
         expect(error.message).toBe(
-          "MCP error -32602: MCP error -32602: Invalid add parameters",
+          "MCP error -32602: MCP error -32602: Invalid add parameters"
         );
       }
     },
@@ -1356,7 +1368,7 @@ test("server remains usable after InvalidParams error", async () => {
 
         // @ts-expect-error - we know that error is an McpError
         expect(error.message).toBe(
-          "MCP error -32602: MCP error -32602: Invalid add parameters",
+          "MCP error -32602: MCP error -32602: Invalid add parameters"
         );
       }
 
@@ -1367,7 +1379,7 @@ test("server remains usable after InvalidParams error", async () => {
             a: 1,
             b: 2,
           },
-        }),
+        })
       ).toEqual({
         content: [{ type: "text", text: "3" }],
       });
@@ -1410,11 +1422,11 @@ test("allows new clients to connect after a client disconnects", async () => {
     },
     {
       capabilities: {},
-    },
+    }
   );
 
   const transport1 = new SSEClientTransport(
-    new URL(`http://localhost:${port}/sse`),
+    new URL(`http://localhost:${port}/sse`)
   );
 
   await client1.connect(transport1);
@@ -1426,7 +1438,7 @@ test("allows new clients to connect after a client disconnects", async () => {
         a: 1,
         b: 2,
       },
-    }),
+    })
   ).toEqual({
     content: [{ type: "text", text: "3" }],
   });
@@ -1440,11 +1452,11 @@ test("allows new clients to connect after a client disconnects", async () => {
     },
     {
       capabilities: {},
-    },
+    }
   );
 
   const transport2 = new SSEClientTransport(
-    new URL(`http://localhost:${port}/sse`),
+    new URL(`http://localhost:${port}/sse`)
   );
 
   await client2.connect(transport2);
@@ -1456,7 +1468,7 @@ test("allows new clients to connect after a client disconnects", async () => {
         a: 1,
         b: 2,
       },
-    }),
+    })
   ).toEqual({
     content: [{ type: "text", text: "3" }],
   });
@@ -1585,7 +1597,7 @@ test("provides auth to tools", async () => {
     },
     {
       capabilities: {},
-    },
+    }
   );
 
   const transport = new SSEClientTransport(
@@ -1602,14 +1614,14 @@ test("provides auth to tools", async () => {
           });
         },
       },
-    },
+    }
   );
 
   await client.connect(transport);
 
   expect(
     authenticate,
-    "authenticate should have been called",
+    "authenticate should have been called"
   ).toHaveBeenCalledTimes(1);
 
   expect(
@@ -1619,7 +1631,7 @@ test("provides auth to tools", async () => {
         a: 1,
         b: 2,
       },
-    }),
+    })
   ).toEqual({
     content: [{ type: "text", text: "3" }],
   });
@@ -1640,7 +1652,7 @@ test("provides auth to tools", async () => {
       },
       reportProgress: expect.any(Function),
       session: { id: 1 },
-    },
+    }
   );
 });
 
@@ -1673,11 +1685,11 @@ test("blocks unauthorized requests", async () => {
     },
     {
       capabilities: {},
-    },
+    }
   );
 
   const transport = new SSEClientTransport(
-    new URL(`http://localhost:${port}/sse`),
+    new URL(`http://localhost:${port}/sse`)
   );
 
   expect(async () => {
