@@ -1,3 +1,7 @@
+/**
+ * 导入模块和类型定义
+ * Import modules and type definitions
+ */
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -31,19 +35,41 @@ import { startSSEServer } from "mcp-proxy";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import parseURITemplate from "uri-templates";
 import http from "http";
-import {
-  fetch
-} from "undici";
+import { fetch } from "undici";
 
+/**
+ * SSE服务器类型定义
+ * SSE server type definition
+ * @property {Function} close - 关闭SSE服务器的异步方法
+ * @property {Function} close - Async method to close SSE server
+ */
 export type SSEServer = {
   close: () => Promise<void>;
 };
 
+/**
+ * FastMCP事件类型
+ * FastMCP event types
+ * @template T - FastMCPSessionAuth类型参数
+ * @template T - FastMCPSessionAuth type parameter
+ * @property {Function} connect - 连接事件回调
+ * @property {Function} connect - Connection event callback
+ * @property {Function} disconnect - 断开连接事件回调
+ * @property {Function} disconnect - Disconnection event callback
+ */
 type FastMCPEvents<T extends FastMCPSessionAuth> = {
   connect: (event: { session: FastMCPSession<T> }) => void;
   disconnect: (event: { session: FastMCPSession<T> }) => void;
 };
 
+/**
+ * FastMCP会话事件类型
+ * FastMCP session event types
+ * @property {Function} rootsChanged - 根目录变更事件回调
+ * @property {Function} rootsChanged - Roots changed event callback
+ * @property {Function} error - 错误事件回调
+ * @property {Function} error - Error event callback
+ */
 type FastMCPSessionEvents = {
   rootsChanged: (event: { roots: Root[] }) => void;
   error: (event: { error: Error }) => void;
@@ -51,6 +77,7 @@ type FastMCPSessionEvents = {
 
 /**
  * Generates an image content object from a URL, file path, or buffer.
+ * 从URL、文件路径或缓冲区生成图像内容对象
  */
 export const imageContent = async (
   input: { url: string } | { path: string } | { buffer: Buffer },
@@ -86,7 +113,19 @@ export const imageContent = async (
   } as const;
 };
 
+/**
+ * FastMCP基础错误类
+ * FastMCP base error class
+ * @abstract
+ * @extends Error
+ */
 abstract class FastMCPError extends Error {
+  /**
+   * 构造函数
+   * Constructor
+   * @param {string} [message] - 错误信息
+   * @param {string} [message] - Error message
+   */
   public constructor(message?: string) {
     super(message);
     this.name = new.target.name;
@@ -109,25 +148,52 @@ export class UnexpectedStateError extends FastMCPError {
 
 /**
  * An error that is meant to be surfaced to the user.
+ * 一个需要向用户显示的错误
  */
 export class UserError extends UnexpectedStateError {}
 
+/**
+ * 工具参数类型定义
+ * Tool parameters type definition
+ * @typedef {StandardSchemaV1} ToolParameters
+ */
 type ToolParameters = StandardSchemaV1;
 
+/**
+ * 基本字面量类型
+ * Basic literal types
+ * @typedef {boolean | null | number | string | undefined} Literal
+ */
 type Literal = boolean | null | number | string | undefined;
 
+/**
+ * 可序列化值类型
+ * Serializable value type
+ * @typedef {Literal | SerializableValue[] | { [key: string]: SerializableValue }} SerializableValue
+ */
 type SerializableValue =
   | Literal
   | SerializableValue[]
   | { [key: string]: SerializableValue };
 
+/**
+ * 进度信息类型
+ * Progress information type
+ * @typedef {Object} Progress
+ * @property {number} progress - 当前进度值
+ * @property {number} progress - Current progress value
+ * @property {number} [total] - 总进度值（可选）
+ * @property {number} [total] - Total progress value (optional)
+ */
 type Progress = {
   /**
    * The progress thus far. This should increase every time progress is made, even if the total is unknown.
+   * 当前进度。每当有进展时都应该增加，即使总量未知
    */
   progress: number;
   /**
    * Total number of items to process (or total progress required), if known.
+   * 需要处理的总项目数（或所需的总进度），如果已知的话
    */
   total?: number;
 };
@@ -153,6 +219,7 @@ const TextContentZodSchema = z
     type: z.literal("text"),
     /**
      * The text content of the message.
+     * 消息的文本内容
      */
     text: z.string(),
   })
@@ -169,10 +236,12 @@ const ImageContentZodSchema = z
     type: z.literal("image"),
     /**
      * The base64-encoded image data.
+     * Base64编码的图像数据
      */
     data: z.string().base64(),
     /**
      * The MIME type of the image. Different providers may support different image types.
+     * 图像的MIME类型。不同的提供者可能支持不同的图像类型
      */
     mimeType: z.string(),
   })
@@ -205,23 +274,30 @@ type Completion = {
 
 /**
  * https://github.com/modelcontextprotocol/typescript-sdk/blob/3164da64d085ec4e022ae881329eee7b72f208d4/src/types.ts#L983-L1003
+ * 类型定义来源：modelcontextprotocol/typescript-sdk 仓库中的类型定义文件
  */
 const CompletionZodSchema = z.object({
   /**
    * An array of completion values. Must not exceed 100 items.
+   * 补全值的数组。不得超过100项
    */
   values: z.array(z.string()).max(100),
   /**
    * The total number of completion options available. This can exceed the number of values actually sent in the response.
+   * 可用的补全选项总数。这可能超过响应中实际发送的值的数量
    */
   total: z.optional(z.number().int()),
   /**
    * Indicates whether there are additional completion options beyond those provided in the current response, even if the exact total is unknown.
+   * 表示是否存在当前响应中提供的选项之外的其他补全选项，即使确切的总数未知
    */
   hasMore: z.optional(z.boolean()),
 }) satisfies z.ZodType<Completion>;
 
-type Tool<T extends FastMCPSessionAuth, Params extends ToolParameters = ToolParameters> = {
+type Tool<
+  T extends FastMCPSessionAuth,
+  Params extends ToolParameters = ToolParameters,
+> = {
   name: string;
   description?: string;
   parameters?: Params;
@@ -363,23 +439,105 @@ const FastMCPSessionEventEmitterBase: {
 class FastMCPSessionEventEmitter extends FastMCPSessionEventEmitterBase {}
 
 type SamplingResponse = {
+  /**
+   * The model name
+   * 模型名称
+   */
   model: string;
+  /**
+   * The reason for stopping
+   * 停止的原因
+   */
   stopReason?: "endTurn" | "stopSequence" | "maxTokens" | string;
+  /**
+   * The role of the message sender
+   * 消息发送者的角色
+   */
   role: "user" | "assistant";
+  /**
+   * The content of the message
+   * 消息的内容
+   */
   content: TextContent | ImageContent;
 };
 
 type FastMCPSessionAuth = Record<string, unknown> | undefined;
+/**
+ * Authentication type for FastMCP sessions
+ * FastMCP会话的认证类型
+ */
 
-export class FastMCPSession<T extends FastMCPSessionAuth = FastMCPSessionAuth> extends FastMCPSessionEventEmitter {
+/**
+ * FastMCP会话核心类
+ * FastMCP session core class
+ * @template T - 会话认证类型，默认为FastMCPSessionAuth
+ * @template T - Session auth type, defaults to FastMCPSessionAuth
+ * @extends FastMCPSessionEventEmitter
+ */
+export class FastMCPSession<
+  T extends FastMCPSessionAuth = FastMCPSessionAuth,
+> extends FastMCPSessionEventEmitter {
+  /**
+   * 服务器能力配置
+   * Server capabilities configuration
+   * @private
+   */
   #capabilities: ServerCapabilities = {};
+
+  /**
+   * 客户端能力配置
+   * Client capabilities configuration
+   * @private
+   */
   #clientCapabilities?: ClientCapabilities;
+
+  /**
+   * 日志级别
+   * Logging level
+   * @private
+   */
   #loggingLevel: LoggingLevel = "info";
+
+  /**
+   * 提示列表
+   * Prompts list
+   * @private
+   */
   #prompts: Prompt[] = [];
+
+  /**
+   * 资源列表
+   * Resources list
+   * @private
+   */
   #resources: Resource[] = [];
+
+  /**
+   * 资源模板列表
+   * Resource templates list
+   * @private
+   */
   #resourceTemplates: ResourceTemplate[] = [];
+
+  /**
+   * 根目录列表
+   * Roots list
+   * @private
+   */
   #roots: Root[] = [];
+
+  /**
+   * MCP服务器实例
+   * MCP server instance
+   * @private
+   */
   #server: Server;
+
+  /**
+   * 认证信息
+   * Authentication info
+   * @private
+   */
   #auth: T | undefined;
 
   constructor({
@@ -566,15 +724,17 @@ export class FastMCPSession<T extends FastMCPSessionAuth = FastMCPSessionAuth> e
     }
 
     if (!this.#clientCapabilities) {
-      console.warn('[warning] FastMCP could not infer client capabilities')
+      console.warn("[warning] FastMCP could not infer client capabilities");
     }
 
     if (this.#clientCapabilities?.roots?.listChanged) {
       try {
         const roots = await this.#server.listRoots();
         this.#roots = roots.roots;
-      } catch(e) {
-        console.error(`[error] FastMCP received error listing roots.\n\n${e instanceof Error ? e.stack : JSON.stringify(e)}`)
+      } catch (e) {
+        console.error(
+          `[error] FastMCP received error listing roots.\n\n${e instanceof Error ? e.stack : JSON.stringify(e)}`,
+        );
       }
     }
 
@@ -714,15 +874,17 @@ export class FastMCPSession<T extends FastMCPSessionAuth = FastMCPSessionAuth> e
   private setupToolHandlers(tools: Tool<T>[]) {
     this.#server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
-        tools: await Promise.all(tools.map(async (tool) => {
-          return {
-            name: tool.name,
-            description: tool.description,
-            inputSchema: tool.parameters
-              ? await toJsonSchema(tool.parameters)
-              : undefined,
-          };
-        })),
+        tools: await Promise.all(
+          tools.map(async (tool) => {
+            return {
+              name: tool.name,
+              description: tool.description,
+              inputSchema: tool.parameters
+                ? await toJsonSchema(tool.parameters)
+                : undefined,
+            };
+          }),
+        ),
       };
     });
 
@@ -740,7 +902,7 @@ export class FastMCPSession<T extends FastMCPSessionAuth = FastMCPSessionAuth> e
 
       if (tool.parameters) {
         const parsed = await tool.parameters["~standard"].validate(
-          request.params.arguments
+          request.params.arguments,
         );
 
         if (parsed.issues) {
@@ -1030,8 +1192,14 @@ const FastMCPEventEmitterBase: {
 class FastMCPEventEmitter extends FastMCPEventEmitterBase {}
 
 type Authenticate<T> = (request: http.IncomingMessage) => Promise<T>;
+/**
+ * Authentication function type
+ * 认证函数类型
+ */
 
-export class FastMCP<T extends Record<string, unknown> | undefined = undefined> extends FastMCPEventEmitter {
+export class FastMCP<
+  T extends Record<string, unknown> | undefined = undefined,
+> extends FastMCPEventEmitter {
   #options: ServerOptions<T>;
   #prompts: InputPrompt[] = [];
   #resources: Resource[] = [];
@@ -1053,6 +1221,7 @@ export class FastMCP<T extends Record<string, unknown> | undefined = undefined> 
   }
 
   /**
+   * 添加工具到服务器
    * Adds a tool to the server.
    */
   public addTool<Params extends ToolParameters>(tool: Tool<T, Params>) {
@@ -1060,6 +1229,7 @@ export class FastMCP<T extends Record<string, unknown> | undefined = undefined> 
   }
 
   /**
+   * 添加资源到服务器
    * Adds a resource to the server.
    */
   public addResource(resource: Resource) {
@@ -1067,6 +1237,7 @@ export class FastMCP<T extends Record<string, unknown> | undefined = undefined> 
   }
 
   /**
+   * 添加资源模板到服务器
    * Adds a resource template to the server.
    */
   public addResourceTemplate<
@@ -1076,6 +1247,7 @@ export class FastMCP<T extends Record<string, unknown> | undefined = undefined> 
   }
 
   /**
+   * 添加提示到服务器
    * Adds a prompt to the server.
    */
   public addPrompt<const Args extends InputPromptArgument[]>(
@@ -1085,6 +1257,7 @@ export class FastMCP<T extends Record<string, unknown> | undefined = undefined> 
   }
 
   /**
+   * 启动服务器
    * Starts the server.
    */
   public async start(
@@ -1116,7 +1289,6 @@ export class FastMCP<T extends Record<string, unknown> | undefined = undefined> 
       this.emit("connect", {
         session,
       });
-
     } else if (options.transportType === "sse") {
       this.#sseServer = await startSSEServer<FastMCPSession<T>>({
         endpoint: options.sse.endpoint as `/${string}`,
@@ -1154,6 +1326,7 @@ export class FastMCP<T extends Record<string, unknown> | undefined = undefined> 
 
       console.info(
         `server is running on SSE at http://localhost:${options.sse.port}${options.sse.endpoint}`,
+        // 服务器正在SSE模式下运行，访问地址为：http://localhost:${options.sse.port}${options.sse.endpoint}
       );
     } else {
       throw new Error("Invalid transport type");
@@ -1161,6 +1334,7 @@ export class FastMCP<T extends Record<string, unknown> | undefined = undefined> 
   }
 
   /**
+   * 停止服务器
    * Stops the server.
    */
   public async stop() {

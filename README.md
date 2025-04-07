@@ -586,10 +586,10 @@ import { AuthError } from "fastmcp";
 const server = new FastMCP({
   name: "My Server",
   version: "1.0.0",
-  authenticate: ({request}) => {
+  authenticate: ({ request }) => {
     const apiKey = request.headers["x-api-key"];
 
-    if (apiKey !== '123') {
+    if (apiKey !== "123") {
       throw new Response(null, {
         status: 401,
         statusText: "Unauthorized",
@@ -599,7 +599,7 @@ const server = new FastMCP({
     // Whatever you return here will be accessible in the `context.session` object.
     return {
       id: 1,
-    }
+    };
   },
 });
 ```
@@ -744,10 +744,7 @@ Follow the guide https://modelcontextprotocol.io/quickstart/user and add the fol
   "mcpServers": {
     "my-mcp-server": {
       "command": "npx",
-      "args": [
-        "tsx",
-        "/PATH/TO/YOUR_PROJECT/src/index.ts"
-      ],
+      "args": ["tsx", "/PATH/TO/YOUR_PROJECT/src/index.ts"],
       "env": {
         "YOUR_ENV_VAR": "value"
       }
